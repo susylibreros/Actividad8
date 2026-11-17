@@ -1,0 +1,8 @@
+---
+
+### Paso 5: Ejecutar el sistema y verificar las evidencias
+
+Corre el script desde tu terminal:
+
+```bash
+python scripts/monitor_proactivo_mlops.py

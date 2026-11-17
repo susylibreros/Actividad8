@@ -1,0 +1,46 @@
+cat << 'EOF' > config/alert_rules_slo.json
+{
+    "service_name": "churn-prediction-service-prod",
+    "model_registry_name": "Prod_Candidate_LogisticRegression",
+    "slos": {
+        "availability_target_pct": 99.9,
+        "latency_p95_ms": 150.0,
+        "recall_min_threshold": 0.70,
+        "roc_auc_min_threshold": 0.78,
+        "psi_drift_max_threshold": 0.20,
+        "error_budget_monthly_minutes": 43.2
+    },
+    "alert_rules": [
+        {
+            "alert_id": "ALR-001",
+            "name": "Critical_Data_Drift_And_Recall_Drop",
+            "severity": "P1 - Crítica",
+            "condition": "PSI > 0.25 OR Recall_Rolling_24h < 0.65",
+            "evaluation_window": "15m",
+            "for_duration": "5m",
+            "automated_action": "trigger_rollback_or_retrain",
+            "runbook_ref": "RB-001"
+        },
+        {
+            "alert_id": "ALR-002",
+            "name": "High_Inference_Latency_P95",
+            "severity": "P2 - Alta",
+            "condition": "Latency_P95 > 150ms AND Burn_Rate_1h > 6.0",
+            "evaluation_window": "5m",
+            "for_duration": "3m",
+            "automated_action": "scale_up_replicas_and_clear_cache",
+            "runbook_ref": "RB-002"
+        },
+        {
+            "alert_id": "ALR-003",
+            "name": "Moderate_Feature_Drift_Warning",
+            "severity": "P3 - Media (Warning)",
+            "condition": "0.15 < PSI <= 0.25",
+            "evaluation_window": "1h",
+            "for_duration": "15m",
+            "automated_action": "log_warning_and_schedule_data_audit",
+            "runbook_ref": "RB-003"
+        }
+    ]
+}
+EOF
