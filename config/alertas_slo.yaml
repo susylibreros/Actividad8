@@ -1,0 +1,25 @@
+servicio: "motor-scoring-riesgo-crediticio"
+dataset_publico: "UCI Default of Credit Card Clients (N=30,000)"
+
+slos:
+  latencia_p95_ms: 80.0           # 95% de evaluaciones de crédito deben responder en < 80 ms
+  disponibilidad_pct: 99.9        # Error budget mensual: 0.1% de transacciones fallidas
+  f1_score_minimo: 0.52           # Umbral operativo mínimo sobre clase minoritaria (impago)
+  drift_ks_pvalue_min: 0.05       # Umbral Kolmogorov-Smirnov para LIMIT_BAL, PAY_0 y BILL_AMT1
+
+alertas:
+  - id: "INC-P1-DRIFT"
+    nombre: "Data Drift Macroeconómico / Pérdida de Capacidad Predictiva"
+    severidad: "P1 - Crítica (Impacto Financiero Directo)"
+    condicion: "ks_pvalue < 0.01 OR f1_score < 0.52"
+    regla_anti_ruido: "Persistente durante 2 ventanas consecutivas de 1,000 solicitudes"
+    runbook: "runbooks/RB-01-drift-crediticio.md"
+    respuesta_automatizada: "rollback_a_version_estable_y_reentrenamiento"
+
+  - id: "INC-P2-LATENCIA"
+    nombre: "Degradación de Latencia p95 y Consumo de Error Budget"
+    severidad: "P2 - Alta (Riesgo de Abandono de Solicitud)"
+    condicion: "latencia_p95_ms > 80.0 OR error_budget_consumido_pct > 50"
+    regla_anti_ruido: "3 mediciones consecutivas sobre umbral en ventana de 5 min"
+    runbook: "runbooks/RB-02-latencia-scoring.md"
+    respuesta_automatizada: "activar_inferencia_ligera_y_liberar_hilos"
